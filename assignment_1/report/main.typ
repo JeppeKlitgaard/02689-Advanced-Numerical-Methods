@@ -157,7 +157,7 @@ This can be solved in a few ways:
 
 == Nodal Expansion
 
-We seek to represent the discrete trigonometric polynomial in terms of a nodal expansion over the interval $[0, 2π)$ using $N=2k : k ∈ ℕ$ points, $x_j$ for $j = 0, 1, ..., N-1$. Note the open end of the interval indicating that the last point, $x_(N-1)$ is not placed at the boundary but rather one grid spacing $h=(2π)/N$ inside the domain.
+We seek to represent the discrete trigonometric polynomial in terms of a nodal expansion over the interval $[0, 2π)$ using $N=2k : k ∈ ℕ$ points, $x_j=(2π)/N j$ for $j = 0, 1, ..., N-1$. Note the open end of the interval indicating that the last point, $x_(N-1)$ is not placed at the boundary but rather one grid spacing $h=(2π)/N$ inside the domain.
 
 To aide the reader through the treacherous ambiguity of how the nodal points are placed within the domain, see @fig:nodal_expansion.
 
@@ -196,10 +196,86 @@ To aide the reader through the treacherous ambiguity of how the nodal points are
   caption: [Nodal Expansion. Note that last point $x_3$ is not located at the boundary, as this point is already given by $x_0$ due to periodicity of the trigonometric polynomials.]
 ) <fig:nodal_expansion>
 
-As a consequence of the periodic nature of the Fourier expansion, we find that any reconstruction in such a basis will have the property $u(0) = u(2π)$, allowing 
----
+As a consequence of the periodic nature of the Fourier expansion, we find that any reconstruction in such a basis will have the property $u(0) = u(2π)$.
 
-Derivation of first-order Fourier Differentatioin matrix D. \
+We recall the Fourier series:
+$
+f(x) = sum_(-∞)^∞ c_n e^(i n x) wider x ∈ [0, 2π]
+$ <eq:fourier_series>
+
+Where the complex coefficients $c_n$ are given by:
+$
+c_n = 1/(2π) ∫_0^(2π) f(x) e^(-i n x) dif x
+$ <eq:fourier_coeff>
+
+We seek to find $c_n$ by evaluating the integral in @eq:fourier_coeff by quadrature using the trapezoidal rule:
+$
+∫_0^(2π) f(x) e^(-i n x) ≈ h sum_(j=0)^(N-1) ((f(x_(j+1) e^(-i n x_(j+1))) + f(x_j e^(-i n x_j)))/2)
+$
+
+Noting that the element $j=N-1$ of the sum contains the term $f(x_N) e^(-i n x_N) = f(x_0) e^(-i n x_0)$ by the aforementioned periodicity (which also holds for the factor $e^(-i n x)$ by inspection) we may rewrite the sum as follows upon realising that each term enters exactly twice, cancelling out the factor of $1/2$:
+$
+∫_0^(2π) f(x) e^(-i n x) ≈ h sum_(j=0)^(N-1) f(x_j) e^(-i n x_j)
+$
+
+Which enables the evaluation of the discretised complex coefficients $tilde(c)_n$ as:
+$
+tilde(c)_n
+&= 1/(2π) (2π)/N sum_(j=0)^(N-1) f(x_j) e^(-i n x_j)\
+&= 1/N sum_(j=0)^(N-1) f(x_j) e^(-i n x_j)
+$ <eq:discrete_fourier_coeff>
+
+Such that an objective function $f(x)$ may be approximated by expansion into a truncated Fourier series using the discrete coefficients in @eq:discrete_fourier_coeff as:
+$
+f(x)
+&≈ sum_(n=-N/2)^(N/2) α_n tilde(c)_n e^(i n x)
+&≈ sum_(n=-N/2)^(N/2) ( 1/N sum_(j=0)^(N-1) f(x_j) e^(-i n x_j) ) e^(i n x)\
+&= sum_(j=0)^(N-1) f(x_j) underbrace(1/N sum_(n=-N/2)^(N/2) e^(-i n x_j) e^(i n x), h_j (x) )
+$
+
+Where
+$
+α_n ≔ cases(
+  1/2 &quad |n| = N/2\
+  1 &quad |n| < N/2
+)
+$
+
+Is introduced to handle the overcounting arising from the fact that $e^(i N/2 x) = e^(- i N/2 x) med ∀ x=x_i$.
+
+$h_j (x)$ is understood to scale the contributions of each node $x_j$ and may be expressed as:
+$
+h_j (x)
+&= α_n/N sum_(n=-N/2)^(N/2) e^(-i n x_j) e^(i n x) = α_n/N sum_(n=-N/2)^(N/2) e^(i n θ) & θ ≔ x-x_j\
+&= 1/N [(e^(i N/2 θ) + e^(-i N/2 θ))/2 + sum_(n=-N/2+1)^(N/2-1) e^(i n θ)]\
+&= 1/N [sum_(n=-N/2)^(N/2) e^(i n θ) - (e^(i N/2 θ) + e^(-i N/2 θ))/2]
+&= 1/N [sum_(n=-N/2)^(N/2) e^(i n θ) - cos(N/2 θ)]
+$
+
+Where the sum may be rewritten to closed form using the identity for a finite geometric series, $sum_(k=0)^M = a (1-r^M)/(1-r)$ with initial value $a=e^(-i N/2 θ)$ and common ratio $r=e^(i θ)$ with $M=N+1$ elements:
+$
+sum_(n=-N/2)^(N/2) e^(i n θ)
+&= e^(-i N/2 θ) ⋅ (1-e^(i (N+1) θ))/(1- e^(i θ))\
+&= e^(-i N/2 θ) ⋅ (e^(i θ/2) (e^(-i θ/2)-e^(i (N+1/2) θ)))/(e^(i θ/2) (e^(-i θ/2)- e^(i θ/2)))\
+&= (e^(-i (1/2+N/2)θ)-e^(i (1/2+N/2) θ))/(e^(-i θ/2)- e^(i θ/2))\
+&= (2i ⋅ sin((N+1)/2 θ))/(2i ⋅ sin(θ/2))
+= sin((N+1)/2 θ)/sin(θ/2)
+$
+
+Which in turn enables a final rewrite of $h_j (x)$ using the identity $sin(α ± β) = sin(α) cos(β) ± cos(α)sin(β)$:
+$
+h_j (x)
+&= 1/N [sin((N+1)/2 θ)/sin(θ/2) - cos(N/2 θ)]\
+&= 1/N [(sin(N/2 θ) cos(θ/2) + cos(N/2 θ) sin(θ/2))/sin(θ/2) - cos(N/2 θ)]\
+&= 1/N [sin(N/2 θ) cot(θ/2) + cos(N/2 θ) - cos(N/2 θ)]\
+&= 1/N sin(N/2 (x-x_j)) cot((x - x_j)/2) &qed
+$ <eq:lagrange_polynomials>
+
+Inspecting @eq:lagrange_polynomials easily reveals that the polynomials take the form of the Dirac delta function over the nodes, $h_j (x_i) = δ_(i j) quad ∀ i, j ∈ {0, ..., N-1}$.
+
+
+
+== Derivation of first-order Fourier Differentatioin matrix $D$
 $
   I_N u(x) = sum_(j=0)^N u(x_j) h_j (x) and d/(d x) I_N u(x) = sum_(j=0)^N u(x_j) h'_j (x)
 $
@@ -217,13 +293,15 @@ hence
 $
   h'_j (x) = (d / (d x) (sin(N/2 (x - x_j)) cos(1/2(x - x_j)))) / (sin(1/2(x - x_j))) - (sin(N/2 (x - x_j)) cos(1/2(x - x_j))^2) / (sin(1/2(x - x_j))^2)
 $
-NOOOO, what a mess
+NOOOO, what a mess \
+This works
 $
   h'_j (x) = 1/N ( N/2 cos(N/2 (x - x_j)) cot(1/2(x - x_j)) - 1/N sin(N/2 (x - x_j)) / (sin(1/2(x - x_j))^2))
 $
 consider $x_j = (2pi) / N j and x_k - x_j = (2pi) / N (k - j)$
 $
-  h'_j (x_k) = 1/N ( N/2 cos(2 pi (k - j)) cot(pi / N (k - j)) - 1/N sin(2 pi (k - j))) / (sin(pi / N (k - j))^2))
+  h'_j (x_k) = 1/N ( N/2 cos(pi (k - j)) cot(pi / N (k - j)) ) - 1/N sin(pi (k - j)) / (sin(pi / N (k - j))^2) = \
+  1/2 (-1)^(k-j) cot(pi / N (k - j)) - 0 = 1/2 (-1)^(k-j) cos(pi / N (k - j)) / sin(pi / N (k - j))
 $
 
 
