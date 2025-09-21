@@ -68,11 +68,11 @@ $
 Which we manipulate to match the conventional domain $[0, 2π]$ of the complex Fourier coefficients $c_n$ in order to obtain 
 $
 u(x) ≔ 1/(2-cos(x)) wider x ∈ [0, 2π]
-$ <eq:a_obj>
+$ //<eq:a_obj>
 
 Where we recall the complex Fourier coefficients as:
 $
-c_n = 1/(2π) ∫_0^(2π) u(x) e^(-i n x) dif x wider n ∈ ℤ
+c_n = 1/(2π) ∫_0^(2π) u(x) e^(-i n x) dif x wider n ∈ ℤ wider n ∈ ℤ\
 $
 
 Which for @eq:a_obj may be solved as:
@@ -81,7 +81,7 @@ c_n
 &= 1/(2π) ∫_0^(2π) 1/(2-cos(x)) e^(-i n x) dif x wider n ∈ ℤ\
 &= ...\
 &= 1/(sqrt(3)(2 + sqrt(3))^(|n|))
-$ <eq:a_coeffs>
+$ //<eq:a_coeffs>
 
 
 Calculations:
@@ -143,16 +143,121 @@ $
 c_n = 1 / sqrt(3) (2 - sqrt(3))^n  = 1 / (sqrt(3) (2 + sqrt(3))^n)
 $
 
-== Convergence Behaviour of Truncated Fourier Expansion
+== Truncated Fourier Expansion
+We are given the objective function
+$
+tilde(u)(x) ≔ 1/(2-cos(π x)) wider x ∈ [0, 2]
+$
 
-Restricting the number of coefficients, $c_n$
+Which we manipulate to match the conventional domain $[0, 2π]$ of the complex Fourier coefficients $c_n$ in order to obtain 
+$
+u(x) ≔ 1/(2-cos(x)) wider x ∈ [0, 2π]
+$ <eq:a_obj>
 
+=== Closed-Form Analytical Fourier Coefficients
 
-This can be solved in a few ways:
-1. Residue Theorem
-2. Manipulate integrand to match standard integral (which standard integral though?)
+In order to determine a closed-form solution to the Fourier coefficients of a Fourier series expansion of @eq:a_obj, we first recall the complex Fourier coefficients as:
+$
+c_n
+&= 1/(2π) ∫_0^(2π) u(x) e^(-i n x) dif x wider n ∈ ℤ\
+&= 1/(2π) ∫_0^(2π) 1/(2-cos(x)) e^(-i n x) dif x\
+$ <eq:fourier_coeff_unsolved>
+
+Inspection of @eq:a_obj immediately reveals that $u(x)$ is an _even_ and _real_ function, which in turn implies that the sine component of the integrand must vanish. This can be shown by using Euler's formula to express @eq:fourier_coeff_unsolved as:
+$
+c_n
+&= 1/(2π) [∫_0^(2π) cos(n x)/(2-cos(x)) dif x + cancel(∫_0^(2π) (i sin(n x))/(2-cos(x)) dif x)]\
+&= 1/(2π) ∫_0^(2π) cos(n x)/(2-cos(x)) dif x
+$ <eq:fourier_coeff_unsolved_2>
+
+Where the cancellation becomes obvious upon realising that the integrand is odd centered around $π$ (as it is a quotient of an even and an odd function) and thus integrates to zero over the interval $[0, 2π]$.
+
+We seek to find a closed-form, analytical solution of @eq:fourier_coeff_unsolved_2 by means of induction by considering:
+$
+c_(n+1) = 1/(2pi) integral_0^(2pi) cos((n+1)x) / (2 - cos(x)) dif x = 2 / (2pi) integral_0^(2pi) (cos(x) cos(n x)) / (2 - cos(x)) dif x - 1/(2pi)  integral_0^(2pi) cos((n-1)x) / (2 - cos(x)) dif x
+$ <eq:1a_inductive_step_1>
+
+Where the latter expression arises from the use of the trigonometric identities
+$
+cos(alpha ± beta) = cos(alpha) cos(beta) ∓ sin(alpha) sin(beta)\
+⇕\
+cos(n x + x) + cos(n x - x) = 2 cos(x) cos(n x)
+$
+
+We consider the following integral:
+$
+∫_0^(2π) (cos(x) cos(n x)) / (2 - cos(x))
+&= ∫_0^(2π) ((2 - (2 -cos(x))) cos(n x)) / (2 - cos(x)) dif x\
+&= 2 ∫_0^(2π) cos(n x) / (2 - cos(x)) dif x - ∫_0^(2π) cos(n x) dif x\
+&= 4π  c_n - 2π δ_(0 n)
+$
+
+Such that the inductive step from @eq:1a_inductive_step_1 becomes:
+$
+c_(n+1) = 4c_n - 2δ_(0n) - c_(n-1)
+$ <eq:1a_inductive_step_2>
+
+We consider the case $n>0$ such that @eq:1a_inductive_step_2 becomes:
+$
+c_(n+1) = 4c_n - c_(n-1)
+$
+
+Yielding the characteristic polynomial:
+$
+α^2-4α+1=0
+$
+
+With solutions
+$
+α_(1,2) = 2 ± sqrt(3)
+$
+
+Leading to coefficients $c_(n)$ of the form:
+$
+c_(n+1) = A_1 α_1^n + A_2 α_2^n = A_1 (2 + sqrt(3))^n + A_2 (2 - sqrt(3))^n
+$
+
+Where $A_1, A_2$ may be determined by considering cases $c_0, c_1$:
+$
+c_0 &= A_1 + A_2 &&= 1/(2π) ∫_0^(2π) cos(0)/(2-cos(x)) dif x &&= 1/sqrt(3)\
+c_1 &= A_1(2+sqrt(3)) + A_2(2-sqrt(3)) &&=1/(2π) ∫_0^(2π) cos(x)/(2-cos(x)) dif x &&= 1/(sqrt(3)(2+sqrt(3)))\
+$ <eq:1a_initial_steps>
+$
+⇕
+$
+$
+A_1 = 0 wider and wider A_2 = 1/sqrt(3)
+$
+
+Thus providing a closed-form solution for the coefficients $c_n$ for the case $n>0$:
+$
+c_n = 1/sqrt(3) (2-sqrt(3))^n
+$
+
+We may generalise this solution to the $n=0$ case by simply observing that $c_0 = 1/sqrt(3)(2-sqrt(3))^0 = 1/sqrt(3)$ as in @eq:1a_initial_steps.
+
+The case $n<0$ may be elucidated by symmetry arguments using the fact that the objective function $u(x)=1/(2-cos(x))$ is even, which implies that the Fourier coefficients themselves will be even: $c_n = c_(-n)$.
+This allows the complex Fourier coefficients $c_n$ to be given as a single closed-form solution:
+$
+c_n = 1/sqrt(3)(2-sqrt(3))^(|n|) = 1/(sqrt(3) (2+sqrt(3))^(|n|)) wider n ∈ ℤ
+$
+
+=== Convergence Behaviour of Truncated Fourier Expansion
+
+We may then investigate the truncation error $||u(x) -cal(P)_N u(x)||_2$ where $cal(P)_N$ denotes a truncated Fourier expansion with $N$ modes.
+
+We simply evaluate the exact function and the truncated Fourier expansion on a fine grid over $x∈[0, 2π]$ for $N∈{1, ..., 100}$ to obtain the graph shown in @fig:1a_fourier_truncation_convergence.
+
+#figure(
+  image("output/1a_fourier_truncation_convergence.png"),
+  caption: [Truncation Error $||u(x) -cal(P)_N u(x)||_2$ for $u(x) = 1/(2-cos(x))$ over a range of truncation levels, $N$]
+) <fig:1a_fourier_truncation_convergence>
+
+We observe that we reach machine precision at $N ≈ 25$, after which the truncation error is not improved by employing more modes in the expansion.
 
 == Convergence Behaviour of Discrete Fourier Coefficients
+
+TODO. JK has some initial plots in notebook
 
 
 == Nodal Expansion
@@ -198,7 +303,9 @@ To aide the reader through the treacherous ambiguity of how the nodal points are
 
 As a consequence of the periodic nature of the Fourier expansion, we find that any reconstruction in such a basis will have the property $u(0) = u(2π)$.
 
-We recall the Fourier series:
+=== Closed-Form Lagrange Polynomial Derivation
+
+We seek to derive a closed-form solution for the Lagrange polynomials using a nodal expansion of the discrete trigonometric polynomial by first recalling the Fourier series:
 $
 f(x) = sum_(-∞)^∞ c_n e^(i n x) wider x ∈ [0, 2π]
 $ <eq:fourier_series>
@@ -273,9 +380,20 @@ $ <eq:lagrange_polynomials>
 
 Inspecting @eq:lagrange_polynomials easily reveals that the polynomials take the form of the Dirac delta function over the nodes, $h_j (x_i) = δ_(i j) quad ∀ i, j ∈ {0, ..., N-1}$.
 
+=== Visualisation of Lagrange Polynomials
+
+Having now obtained an expression for the Lagrange Polynomials, $h_j (x)$ as given in @eq:lagrange_polynomials, we visualise the polynomials for the $N=6$ case as shown in @fig:lagrange_polynomials.
+
+#figure(
+  image("output/1c_lagrange_polynomials.png"),
+  caption: [Lagrange Polynomials $h_j (x)$ for $N=6$. Note that $h_j (x_i) = δ_(i j)$ where $x_i$ are demarked by the dashed vertical lines.]
+) <fig:lagrange_polynomials>
 
 
-== Derivation of first-order Fourier Differentatioin matrix $D$
+=== Fourier Differentiation Matrix
+--- TODO: Add a bit more verbiage below:
+
+Derivation of first-order Fourier Differentatioin matrix $D$
 $
   I_N u(x) = sum_(j=0)^N u(x_j) h_j (x) and d/(d x) I_N u(x) = sum_(j=0)^N u(x_j) h'_j (x)
 $
@@ -304,6 +422,11 @@ $
   1/2 (-1)^(k-j) cot(pi / N (k - j)) - 0 = 1/2 (-1)^(k-j) cos(pi / N (k - j)) / sin(pi / N (k - j))
 $
 
+== Fourier Differentiation Routine
+
+== Title???
+
+== Numerical Differentiation using Fast Fourier Transform
 
 
 = Polynomial Methods <sec:polynomial>
