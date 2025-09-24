@@ -222,9 +222,11 @@ $
 c_0 &= A_1 + A_2 &&= 1/(2π) ∫_0^(2π) cos(0)/(2-cos(x)) dif x &&= 1/sqrt(3)\
 c_1 &= A_1(2+sqrt(3)) + A_2(2-sqrt(3)) &&=1/(2π) ∫_0^(2π) cos(x)/(2-cos(x)) dif x &&= 1/(sqrt(3)(2+sqrt(3)))\
 $ <eq:1a_initial_steps>
-$
+#math.equation(block: true, numbering: none)[
+	$
 ⇕
-$
+$	
+]
 $
 A_1 = 0 wider and wider A_2 = 1/sqrt(3)
 $
@@ -241,6 +243,9 @@ This allows the complex Fourier coefficients $c_n$ to be given as a single close
 $
 c_n = 1/sqrt(3)(2-sqrt(3))^(|n|) = 1/(sqrt(3) (2+sqrt(3))^(|n|)) wider n ∈ ℤ
 $
+
+We thus find the that asymptotic decay rate of the continuous Fourier coefficients to be of order $cal(O)^(|n|)$.
+
 
 === Convergence Behaviour of Truncated Fourier Expansion
 
@@ -347,8 +352,7 @@ $
   1 &quad |n| < N/2
 )
 $
-
-Is introduced to handle the overcounting arising from the fact that $e^(i N/2 x) = e^(- i N/2 x) med ∀ x=x_i$.
+is introduced to handle the overcounting arising from the fact that $e^(i N/2 x) = e^(- i N/2 x) med ∀ x=x_i$.
 
 $h_j (x)$ is understood to scale the contributions of each node $x_j$ and may be expressed as:
 $
@@ -359,7 +363,11 @@ h_j (x)
 &= 1/N [sum_(n=-N/2)^(N/2) e^(i n θ) - cos(N/2 θ)]
 $
 
-Where the sum may be rewritten to closed form using the identity for a finite geometric series, $sum_(k=0)^M = a (1-r^M)/(1-r)$ with initial value $a=e^(-i N/2 θ)$ and common ratio $r=e^(i θ)$ with $M=N+1$ elements:
+Where the sum may be rewritten to closed form using the identity for a finite geometric series, 
+$
+sum_(k=0)^M = a (1-r^M)/(1-r),
+$ 
+with initial value $a=e^(-i N/2 θ)$ and common ratio $r=e^(i θ)$ with $M=N+1$ elements:
 $
 sum_(n=-N/2)^(N/2) e^(i n θ)
 &= e^(-i N/2 θ) ⋅ (1-e^(i (N+1) θ))/(1- e^(i θ))\
@@ -393,15 +401,15 @@ Having now obtained an expression for the Lagrange Polynomials, $h_j (x)$ as giv
 === Fourier Differentiation Matrix
 --- TODO: Add a bit more verbiage below:
 
-Derivation of first-order Fourier Differentatioin matrix $D$
+To derive the first-order Fourier Differentiation matrix $D$, we differentiate the Fourier Interpolation,
 $
-  I_N u(x) = sum_(j=0)^N u(x_j) h_j (x) and d/(d x) I_N u(x) = sum_(j=0)^N u(x_j) h'_j (x)
+  I_N u(x) = sum_(j=0)^N u(x_j) h_j (x) and d/(d x) I_N u(x) = sum_(j=0)^N u(x_j) h'_j (x),
 $
 where
 $
-  h_j (x) = 1/N sin(N/2 (x - x_j)) cot(1/2(x - x_j)) = 1/N (sin(N/2 (x - x_j)) cos(1/2(x - x_j))) / (sin(1/2(x - x_j)))
+  h_j (x) = 1/N sin(N/2 (x - x_j)) cot(1/2(x - x_j)) = 1/N (sin(N/2 (x - x_j)) cos(1/2(x - x_j))) / (sin(1/2(x - x_j))).
 $
-consider
+We therefore consider the derivative of $h_j$, using the product rule, 
 $
 d / (d x) sin(N/2 (x - x_j)) cos(1/2(x - x_j)) = \
 N/2 cos(N/2 (x - x_j)) cos(1/2 (x - x_j)) - sin(N/2 (x - x_j)) sin(1/2 (x - x_j)) \
@@ -416,11 +424,21 @@ This works
 $
   h'_j (x) = 1/N ( N/2 cos(N/2 (x - x_j)) cot(1/2(x - x_j)) - 1/N sin(N/2 (x - x_j)) / (sin(1/2(x - x_j))^2))
 $
-consider $x_j = (2pi) / N j and x_k - x_j = (2pi) / N (k - j)$
+We now insert $x_j = (2pi) / N j$, giving us $x_k - x_j = (2pi) / N (k - j)$, which allows us to simplify
 $
   h'_j (x_k) = 1/N ( N/2 cos(pi (k - j)) cot(pi / N (k - j)) ) - 1/N sin(pi (k - j)) / (sin(pi / N (k - j))^2) = \
-  1/2 (-1)^(k-j) cot(pi / N (k - j)) - 0 = 1/2 (-1)^(k-j) cos(pi / N (k - j)) / sin(pi / N (k - j))
+  1/2 (-1)^(k-j) cot(pi / N (k - j)) - 0 = 1/2 (-1)^(k-j) cos(pi / N (k - j)) / sin(pi / N (k - j)).
 $
+TODO: There is something off with our signs compared to the book
+
+Thus, the entries of the Fourier Differentiation matrix $D$, can be calculated as
+$
+D_(k j) = h'_j (x_k) = cases(
+  1/2(-1)^(j+k)cot(pi / N (j-k)) &"if" j != k, 
+  0 &"if" j=k
+)
+$
+
 
 == Fourier Differentiation Routine
 
@@ -430,3 +448,14 @@ $
 
 
 = Polynomial Methods <sec:polynomial>
+
+== h) 
+To calculate the Jacobi polynomials, we have to calculate the recurrence with the correct $a$-values. To check out implementation, we plot the first six Lagrange and Chebyshev polynomials, see 
+
+
+== i) 
+(x_j, w_j) are from the function JacobiQP \
+$
+  tilde(f)_k = 1/gamma_k sum_(j=0)^N f(x_j) phi_k (x_j) w_j
+$
+where in our case $f(x) = u(x) = 1/(2 - cos(x))$
