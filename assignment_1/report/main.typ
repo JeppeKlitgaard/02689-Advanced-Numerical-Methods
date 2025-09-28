@@ -184,7 +184,7 @@ We observe that we reach machine precision at $N ≈ 27$, after which the trunca
 
 == Convergence Behaviour of Discrete Fourier Coefficients <sec:1b>
 
-After having found a closed-form expression for the analytical Fourier coefficients in @sec:1a tedious, we would like to compare this with the discrete Fourier coefficients, $tilde(c)_n$, which may be obtained using a Fast Fourier Transform (FFT).
+After having found a closed-form expression for the analytical Fourier coefficients in @sec:1a, we would like to compare this with the discrete Fourier coefficients, $tilde(c)_n$, which may be obtained using a Fast Fourier Transform (FFT).
 
 The discrete Fourier coefficients, $tilde(c)_n$, are derived below in @sec:1c1 as part of the even nodal expansion, and may be represented as:
 $
@@ -309,7 +309,7 @@ $
 
 Where the sum may be rewritten to closed form using the identity for a finite geometric series, 
 $
-sum_(k=0)^M = a (1-r^M)/(1-r),
+sum_(k=0)^M a r^k = a (1-r^M)/(1-r),
 $ 
 with initial value $a=e^(-i N/2 θ)$ and common ratio $r=e^(i θ)$ with $M=N+1$ elements:
 $
@@ -380,12 +380,12 @@ D_(k j) = h'_j (x_k) = cases(
   0 &"if" j=k
 )
 $
-TODO: There is something off with our signs compared to the book.
+// TODO: There is something off with our signs compared to the book.
 
  // skew-symmetry D_{nj} = −D_{jn},
 
 == Fourier Differentiation Routine
-Comment on the fact that the function is $C^(infinity)$ therefore we get spectral convergence.
+// Comment on the fact that the function is $C^(infinity)$ therefore we get spectral convergence.
 
 We consider the function
 $
@@ -396,15 +396,15 @@ $
   v'(x) = exp(sin(x)) cos(x) quad x in [0, 2pi]
 $
 
-TODO: CHANGE FIGURE FROM GIT
 #figure(
-  image("output/1f_FFT_D_CPU_time.png"),
-  caption: [Truncation error of $max_(j in [0, N-1]) {|v'(x_j) - D v(x_j)|}$ across different $N$]
+  image("output/1d_convergence_test.png"),
+  caption: [Truncation error of $max_(j in [0, N-1]) {|v'(x_j) - D v(x_j)|}$ across different $N$ in the semi-log plot.]
 ) <fig:1d_convergence_test>
 
-@fig:1d_convergence_test presents the convergence test for increasing $N$. We observe spectral convergence which is justified by the fact that $v in C^(infinity)([0, 2pi])$, which implies that function $v$ is smooth and hence Fourier Series converges rapidly and uniformly.
+@fig:1d_convergence_test presents the convergence test for increasing $N$. We observe spectral convergence which is justified by the fact that $v in C^(infinity)([0, 2pi])$, which implies that function $v$ is smooth and hence Fourier Series converges rapidly.
+// and uniformly.
 
-MORE MATH JUSTIFICATION NEEDED.
+// MORE MATH JUSTIFICATION NEEDED.
 
 == Convergence in the $L^2$-norm
 
@@ -435,10 +435,9 @@ $
 $
 @fig:1e_functions_wi shows the functions $w^i (x) "for" x in [-2pi, 2pi]$. Note that the function $w^0$ is not periodic on the domain and has a discontinuity at $x=0$, whereas the function $w^i "for" i >= 1$ are periodic on $[-2pi, 2pi]$.
 
-TODO: CHANGE FIGURE FROM GIT
 #figure(
-  image("output/1f_FFT_D_CPU_time.png"),
-  caption: [TODO]
+  image("output/1e_functions.png", width: 80%),
+  caption: [Functions $w^i (x) "for" x in [-2pi, 2pi]$]
 ) <fig:1e_functions_wi>
 
 Consider the derivative of the interpolating Lagrange polynomial
@@ -457,27 +456,29 @@ Consider the estimate of the $L^2$ norm by the discrete $L^2$ norm obtained via 
 $
   ||tau_N||^2_(L^2) = integral_(-2 pi)^(2pi)(tau_N (x))^2 d x = sum_(m=0)^(M) (tau_N (x_m))^2 w_m + eta_M
 $
-where $eta_M$ is the truncation error of the quadrature rule. We use the quadrature routine from scipy with significant number of points $M$ such that the truncation error $eta_M$ is below machine precision. This allows us to observe only the truncation error $tau_N$ for different $N$ when computing the discrete $L^2$ norm.
+where $eta_M$ is the truncation error of the quadrature rule, and we use the formula for quadrature rule for periodic functions. We use the quadrature routine from `scipy` with the number of points $M$ such that the truncation error $eta_M$ is below machine precision. This allows us to observe only the truncation error $tau_N$ for different $N$ when computing the discrete $L^2$ norm on the convergence test. Note that this is a generalization compared to the Fourier Differentiation matrix D, which constructs the Lagrange polynomials on a specific uniform grid and evaluates the derivative on the same uniform grid. In the above formulation, the interpolating Lagrange polynomial is constructed on the uniform grid with $N$ points, but the derivative is evaluated on the grid of size $M$.
 
-@fig:1e_convergence_test presents the convergence test for discrete first derivative of $w^i$. 
 
-COMMENT: convergence related to $C^i$ spaces somehow.
+@fig:1e_convergence_test presents the convergence test for discrete first derivative of $w^i$. We have the following
+$
+  w^1 in C^(0)([-2pi, 2pi]) quad w^2 in C^(1)([-2pi, 2pi]) quad w^3 in C^(2)([-2pi, 2pi])
+$
+Therefore the upper bound for the algebraic convergence is $1 "for" w^1$, $2 "for" w^2$, and $3 "for" w^3$. We observe that for derivatives of $w^2, w^3$ the convergence rate is higher.
+Note, that since the function $w^0 = (w^1)'$ does not have a continuous first derivative and is not periodic the interpolating Lagrange polynomials do not converge point wise for points $x in {-2pi, 0, 2pi}$ and the neighboring points, and the Gibbs oscillations can be observed. However the convergence in the $L^2$ norm is achieved although only linear based on the convergence test.
 
-TODO: CHANGE FIGURE FROM GIT
+// COMMENT: $w^0$ should converge in the L2 space theoretically. 
+
 #figure(
-  image("output/1f_FFT_D_CPU_time.png"),
-  caption: [TODO]
+  image("output/1e_convergence_test_wi.png"),
+  caption: [Convergence test in the log-log plot for approximating the derivative of $w^i$ with Lagrange polynomials in a loglog plot.]
 ) <fig:1e_convergence_test>
 
-COMMENT: $w^0$ should converge in the L2 space theoretically. 
 
 // TODO: CHANGE FIGURE FROM GIT
 // #figure(
 //   image("output/1f_FFT_D_CPU_time.png"),
 //   caption: [TODO]
 // ) <fig:1e_functions_wi>
-
-
 
 // Consider $N = 5$
 // $
@@ -514,10 +515,20 @@ COMMENT: $w^0$ should converge in the L2 space theoretically.
 
 == Numerical Differentiation using Fast Fourier Transform
 
+The derivative of function $v$ can be computed via FFT by the following formula
+$
+  d / (d x) P_N v(x) = sum_(n=0)^(N-1) c_n (i n) e^(i n x)
+$
+Therefore we proceed by obtaining the coefficients $tilde(c)_n$ by the FFT across the equidistant grid of $N$ points, and subsequently we compute the inverse FFT of the set of coefficients ${i n c_n}_(n=0)^(N-1)$. The comparison of CPU time between the computation of derivative of function $v$ via the Fourier Differentiation matrix D and the FFT are presented in @fig:1f_cpu. The break point beyond which the FFT is faster than Fourier Differentiation matrix D was found to be $N=10^3$ on MacBook M4 Pro. The asymptotic convergence rate for Fourier Differentiation matrix D was found to be $O(N^2)$ and the asymptotic convergence rate for FFT was found to be $O(N log(N))$ for $N > 10^2$ which is consistent with the theory.
+
+Note that for the comparison the function $v in C^(infinity)([0, 2pi])$ was used and spectral convergence is observed on the right plot of @fig:1f_cpu - The level of machine precision is achieved with less than $N=50$. Therefore for this function the differentiation via the Fourier Differentiation matrix D should be preferred. Functions which have only up to specific number of continuous derivatives converge algebraically and would require higher $N$ to achieve machine precision.
+
+Generally, the results imply that the choice between Fourier Differentiation matrix D and FFT for derivative computation should be based on the expected number of required $N$, while the number of required $N$ to achieve desired precision should be based on the smoothness of the function to be differentiated.
+
 #figure(
   image("output/1f_FFT_D_CPU_time.png"),
-  caption: [TODO]
-) <fig:jacobi_polynomials>
+  caption: [Comparison of CPU time of Fourier Differentiation matrix D and the FFT for derivative computation of function $v$ for increasing $N$ in a loglog plot.]
+) <fig:1f_cpu>
 
 
 = Polynomial Methods <sec:polynomial>
@@ -538,9 +549,8 @@ a_(n+1,n)^((alpha,beta))&=(2(n+1)(n+alpha+beta+1))/((2n+alpha+beta+2)(2n+alpha+b
 $
 for $n>=0$, and $a^((alpha,beta))_(-1,0)=0$. 
 
-To calculate the Jacobi polynomials, we have to calculate the recursion with the correct $a$-values. The code is implemented in such a way that the polynomials are calculated "from the bottom up", to prevent the costs of recursion. To check our implementation, we plot the first six Lagrange and Chebyshev polynomials, see 
+To calculate the Jacobi polynomials, we have to calculate the recursion with the correct $a$-values. The code, `jacobi_p`, is implemented in such a way that the polynomials are calculated "from the bottom up", to prevent the costs of recursion. To check our implementation, we plot the first six Lagrange and Chebyshev polynomials, see @fig:jacobi_polynomials. For the Chebyshev polynomials, we note that they are scaled Jacobi polynomials,
 
-// @fig:jacobi_polynomials. For the Chebyshev polynomials, we note that they are scaled Jacobi polynomials,
 $
 T_n^((-1/2, -1/2)) (x)=(Gamma(n+1)Gamma(1/2))/Gamma(n+1/2) P_n^((-1/2, -1/2)) (x).
 
@@ -549,7 +559,7 @@ The plots align with the plots given in lectures, so we assume that our correcti
 
 #figure(
   image("output/2h_jacobi_polynomials.png"),
-  caption: [Chebyshev polynomials $T_n^((-1/2, -1/2)) (x)$ and Legendre polynomials $P_n^((0,0)) (x)$ for $n in {0,...,5}$. Note that for the Chebyshev polynomial $P_n^((-1/2, -1/2)) (x)$ has been scaled.]
+  caption: [Chebyshev polynomials $T_n^((-1/2, -1/2)) (x)$ and Legendre polynomials $P_n^((0,0)) (x)$ for $n in {0,...,5}$ calculated by the `jacobi_p` routine. Note that for the Chebyshev polynomial $P_n^((-1/2, -1/2)) (x)$ has been scaled.]
 ) <fig:jacobi_polynomials>
 
 == Numerical Experiments
@@ -561,7 +571,7 @@ where in our case $u(x) = 1/(2 - cos(pi (x+1))$, $x in  [-1,1]$ and we use the L
 
 #figure(
   image("output/2i_coefficients.png", width: 80%),
-  caption: [Plot of calculated coefficients $|c_k|=|tilde(f)_k|$ for $k = 0,...,K$ and varying N. ]
+  caption: [Plot of calculated coefficients $|c_k|=|tilde(f)_k|$ for $k = 0,...,K$ and varying N in a semi-log plot. ]
 ) <fig:calculated_coefficients>
 
 We see that for $N=K$ the coefficients behave as expected, where they decay towards 0 as $k$ grows. For $N < K$, we see that the coefficients follows the expected pattern until the error grows again. We calculate the interpolant as 
@@ -572,7 +582,7 @@ which allows us to examine the interpolation error. Our plot of the error, see @
 
 #figure(
   image("output/2i_error_DTM.png", width: 80%),
-  caption: [Truncation error $||u(x) -I_N u(x)||_2$ of the Discrete Polynomial Transform for the function $tilde(u)(x) = 1/(2 - cos(pi (x+1))$ using 200 coefficients and for varying grid sizes.]
+  caption: [Truncation error $||u(x) -I_N u(x)||_2$ of the Discrete Polynomial Transform for the function $tilde(u)(x) = 1/(2 - cos(pi (x+1))$ using 200 coefficients and for varying grid sizes in a semi-log plot.]
   
 ) <fig:error_DFT>
 
@@ -615,19 +625,19 @@ We then consider the duality between the nodal and the modal expansions for some
 $
 bold(f)=bold(cal(V))hat(bold(f))
 $
-where $bold(f)=(f(tilde(x)_0),f(tilde(x)_1),...,f(tilde(x)_99))^top$ are the modal values, and $hat(bold(f))$ denotes the nodal values, see @eq:nodal_values. We can now approximate any function using the modal values and the calculated Lagrange polynomials as our basis.
+where $bold(f)=(f(tilde(x)_0),f(tilde(x)_1),...,f(tilde(x)_99))^top$ are the nodal values, and $hat(bold(f))$ denotes the modal values, see @eq:nodal_values. We can now approximate any function using the nodal values and the calculated Lagrange polynomials as our basis.
 
 === Approximating a Function Using Nodal Expansion
-We do this for the function $v(x)=sin(pi x)$, $x in [-1,1]$. We first calculate the nodal values as in h) and the Lagrange polynomials as above. Then we can calculate the interpolant,
+We do this for the function $v(x)=sin(pi x)$, $x in [-1,1]$. We first calculate the modal values as in h) and the Lagrange polynomials as above. Then we can calculate the interpolant,
 $
 I_N v(x)=sum_(j=0)^(N-1) (bold(cal(V))hat(bold(v)))_j thin h_j (x).
 $
 
-To inspect the result, we calculate the interpolant for varying $N$ and plot both the interpolant and the errors, see @fig:approximation_errors. Looking at the plots of the approximations, we see that we quite quickly get satisfying results (in the eyeball-norm). This is confirmed by the error plot, where we see that we reach errors of the size of the machine precision using as little as 21 grid points. We see a convergence, that looks like the spectral convergence, we would expect for the DPT method, which makes sense, as the two expansions are equal.
+To inspect the result, we calculate the interpolant for varying $N$ and plot both the interpolant and the errors, see @fig:approximation_errors. Looking at the plots of the approximations, we see that we quite quickly get satisfying results (in the eyeball-norm). This is confirmed by the error plot, where we see that we reach errors of the size of the machine precision using as little as 21 grid points. We see a convergence that looks like the spectral convergence, we would expect for the DPT method, which makes sense, as the two expansions are equal.
 
 #figure(
   image("output/2k_errors.png", width: 110%),
-  caption: [Plot of the approximation of $v(x)$ for $x in [-1,1]$ for a selection of values of $N$ together with a plot of the truncation error $||v(x) -I_N v(x)||_2$.]
+  caption: [Plot of the approximation of $v(x)$ for $x in [-1,1]$ for a selection of values of $N$ together with a plot of the truncation error $||v(x) -I_N v(x)||_2$ in a semi-log plot.]
 ) <fig:approximation_errors>
 
 === Moving Outside Interval
@@ -635,11 +645,11 @@ If we consider the expansion outside of the interval of our Jacobi polynomials, 
 
 We inspect the results like before, see @fig:approximation_errors_extended. Considering the plots of the interpolant, we see that errors occur outside $[-1,1]$ and that the interpolant to grow when moving further away. Looking at the plot of the error, we see that the error indeed grows rapidly for growing $N$ after $N=21$. 
 
-By definition, the Jacobi polynomials only solve the Sturm-Liouville problem for $x in [-1,1]$ and since both the abscissas, coefficients and Lagrange polynomials are based on these, it makes sense that the interpolant fails to be exact outside the interval.
+By definition, the Jacobi polynomials only solve the Sturm-Liouville problem for $x in [-1,1]$ and since the abscissas, coefficients and Lagrange polynomials are based on these, it makes sense that the interpolant fails to be exact outside the interval.
 
 #figure(
   image("output/2k_errors_extended.png", width: 110%),
-  caption: [Plot of the approximation of $v(x)$ for $x in [-1.5,1.5]$ for a selection of values of $N$ together with a plot of the truncation error $||v(x) -I_N v(x)||_2$.]
+  caption: [Plot of the approximation of $v(x)$ for $x in [-1.5,1.5]$ for a selection of values of $N$ together with a plot of the truncation error $||v(x) -I_N v(x)||_2$ in a semi-log plot.]
 ) <fig:approximation_errors_extended>
 
 == Derivative of Jacobi Polynomials
@@ -738,12 +748,12 @@ Where $cal(V)_x$ may be evaluated numerically using the function `grad_jacobi_p`
 
 We exercise our approach by solving the problem of evaluating the first derivative of function $v(x)$ given by:
 $
-v(x) = sin(π x)
+v(x) = exp(sin(π x))
 $ <eq:2k_v>
 
-Where the domain of the function is given as $x ∈ [-1, 1]$. Trivially, the analytical derivative of @eq:2k_v becomes:
+Where the domain of the function is given as $x ∈ [-1, 1]$. The analytical derivative of @eq:2k_v becomes:
 $
-dv(v, x) = π cos(π x)
+dv(v, x) = π cos(π x) exp(sin(π x))
 $
 
 Using $N=$ nodes/modes we obtain the following following:
@@ -775,7 +785,7 @@ cal(M) ≔ (cal(V V^TT))^(-1)
 $
 Such that the $L^2$ norm may be evaluated as:
 $
-norm(f) = sqrt(vv(f)^TT cal(M) vv(f))
+norm(f) ≈ sqrt(vv(f)^TT cal(M) vv(f))
 $
 
 We note that the function `jacobi_p` in @app:jacobi_p is not normalized, which is handled by implementing `jacobi_p_normalisation_const` and `jacobi_p_normalised` which may be found in @app:jacobi_p_normalized.
@@ -795,7 +805,7 @@ Using these normalised polynomials to construct $cal(V)$ and subsequently $cal(M
 #figure(
   image("output/2k_convergence.png"),
   caption: [
-    Convergence for approximation of first derivative of $v(x) = sin(π x)$ using differentiation matrix with Legendre polynomial basis.
+    Convergence for approximation of first derivative of $v(x) = sin(π x)$ using differentiation matrix with Legendre polynomial basis in a semi-log plot.
   ]
 ) <fig:2k_convergence>
 
@@ -806,9 +816,9 @@ $
 norm(d) ≤ A e^(-B N)
 $
 
-Where $A, B ∈ ℝ_+$ are some constants dependant on the problem. This should form a straight line in a semi-log plot, as observed in @fig:2k_convergence, where we find a decent agreement with $B = 2$ as indicated by the dashed orange line.
+Where $A, B ∈ ℝ_+$ are some constants dependant on the problem. This should form a straight line in a semi-log plot, as observed in @fig:2k_convergence, where we find a decent agreement with $B = 0.8$ as indicated by the dashed orange line.
 
-We note that machine precision (≈ $10^(-14)$) is achieved with just $N=22$ modes.
+We note that machine precision (≈ $10^(-13)$) is achieved with just $N=49$ modes.
 
 We may conclude that the outlined method performs exceedingly well for sufficiently smooth functions, as evidenced by its performance on the sine function.
 
