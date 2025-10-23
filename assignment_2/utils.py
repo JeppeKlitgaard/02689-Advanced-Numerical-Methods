@@ -1,7 +1,10 @@
-import numpy as np
 from math import gamma
-from scipy.special import eval_jacobi
+
+import numpy as np
+import numpy.typing as npt
 from scipy import linalg
+from scipy.special import eval_jacobi
+
 
 def JacobiGQ(alpha: float, beta: float, N: int):
     """
@@ -41,7 +44,13 @@ def JacobiGQ(alpha: float, beta: float, N: int):
     return x, w
 
 
-def JacobiGL(alpha, beta, N):
+def JacobiGL(alpha: float, beta: float, N: int) -> npt.NDArray:
+    """
+    Returns the Gauss-Lobatto nodes, x ∈ [-1,1].
+
+    You may need to do a change of basis to get a suitable interval
+    for your problem.
+    """
     x = np.zeros(N+1, dtype=float)
     if N == 1:
         x = np.array([-1, 1])
@@ -59,7 +68,7 @@ def GradJacobiP(x: np.ndarray, alpha: float, beta: float, N: int) -> np.ndarray:
     pass
 
 
-def constructV(x: np.ndarray, alpha=0, beta=0):
+def constructV(x: np.ndarray, alpha: float = 0.0, beta: float = 0.0):
     "Function for constructing the Vandermonde matrix, V_{ij} = P_j(x_i)"
     N = x.shape[0]
     V = np.zeros((N, N))
@@ -68,7 +77,7 @@ def constructV(x: np.ndarray, alpha=0, beta=0):
     return V.T
 
 
-def constructVx(x: np.ndarray, alpha=0, beta=0):
+def constructVx(x: np.ndarray, alpha: float = 0.0, beta: float = 0.0):
     "Function for constructing the derivative of Vandermonde matrix, Vx = dV/dx"
     N = x.shape[0]
     Vx = np.zeros((N, N))
@@ -77,7 +86,7 @@ def constructVx(x: np.ndarray, alpha=0, beta=0):
     return Vx.T
 
 
-def constructD(x: np.ndarray, alpha = 0, beta = 0):
+def constructD(x: npt.NDArray, alpha: float = 0.0, beta: float = 0.0) -> npt.NDArray:
     "Function for constructing the differentiation matrix D = Vx V^{-1}"
     V = constructV(x, alpha=alpha, beta=beta)
     Vx = constructVx(x, alpha=alpha, beta=beta)
