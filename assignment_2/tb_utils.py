@@ -115,6 +115,7 @@ def constructMinv(z = None, V = None, alpha=0, beta=0, a = -1, b = 1):
     norm_const = jacobi_p_normalisation_const(alpha, beta, np.arange(N))
     V_normalized = V / np.sqrt(norm_const)
     M_inv = V_normalized @ V_normalized.T
+    M_inv = M_inv * (2 / (b - a))
     return M_inv
 
 
