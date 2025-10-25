@@ -2,6 +2,7 @@ import numpy as np
 from math import gamma
 from scipy.special import jacobi, legendre, roots_jacobi, eval_jacobi, factorial, gamma
 from scipy import linalg
+import numpy.typing as npt
 
 def JacobiGQ(alpha: float, beta: float, N: int):
     """
