@@ -60,8 +60,49 @@ def JacobiGL(alpha: float, beta: float, N: int) -> npt.NDArray:
     return x
 
 
+def a(alpha, beta, n1, n2):
+    """Calculate a values for given alpha, beta and n 
+    - last entry must be equal to n-1, n or n+1"""
+
+    if n1 == n2 - 1 and n2 > 0:
+        return (2 * (n2 + alpha) * (n2 + beta)) / (
+            (2 * n2 + alpha + beta + 1) * (2 * n2 + alpha + beta)
+        )
+    elif n1 == n2:
+        return (alpha**2 - beta**2) / (
+            (2 * n2 + alpha + beta + 2) * (2 * n2 + alpha + beta)
+            )
+    elif n1 == n2 + 1:
+        return (2 * n1 * (n1 + alpha + beta)) / (
+            (2 * n2 + alpha + beta + 2) * (2 * n2 + alpha + beta + 1)
+            )
+    elif n1 == -1 and n2 == 0:
+        return 0
+    else:
+        raise ValueError("Invalid n1,n2")
+        
+        
 def JacobiP(x: np.ndarray, alpha: float, beta: float, N: int) -> np.ndarray:
-    pass
+    x = np.asarray(x)
+
+    if N == 0:
+        return np.ones_like(x)
+    elif N == 1:
+        return 0.5 * (alpha - beta + (alpha + beta + 2) * x)
+
+    # Start values
+    Pnm2 = np.ones_like(x)                                  # P_0
+    Pnm1 = 0.5 * (alpha - beta + (alpha + beta + 2) * x)    # P_1
+
+    # Iterate recurrence
+    for k in range(2, N + 1):
+        num = ( (a(alpha,beta,k-1,k-1) + x) * Pnm1
+               - a(alpha,beta,k-2,k-1) * Pnm2 )
+        denom = a(alpha,beta,k,k-1)
+        Pn = num / denom
+        Pnm2, Pnm1 = Pnm1, Pn
+
+    return Pnm1
 
 
 def GradJacobiP(x: np.ndarray, alpha: float, beta: float, N: int) -> np.ndarray:
