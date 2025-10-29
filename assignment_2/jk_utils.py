@@ -197,8 +197,8 @@ def grad_jacobi_polynomial_normalised(x, n, k, alpha, beta):
         * gamma(alpha + beta + n + 1 + k)
         / (2**k * gamma(alpha + beta + n + 1))
         * np.sqrt(
-            jacobi_normalisation_const(alpha + k, beta + k, n - k)
-            / jacobi_normalisation_const(alpha, beta, n)
+            jacobi_normalisation_const(n-k, alpha + k, beta + k)
+            / jacobi_normalisation_const(n, alpha, beta)
         )
     )
     p = jacobi_polynomial_normalised(x, n - k, alpha + k, beta + k)
