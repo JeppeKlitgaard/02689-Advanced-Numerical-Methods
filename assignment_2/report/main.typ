@@ -86,7 +86,7 @@ $
 
 Plugging this into @eq:1_bvp:
 $
--ϵ dv(, x, 2)u - dv(, x) u = 1/(e^(-1\/ϵ) -1) [cancel(-ϵ 1/ϵ^2 e^(-x\/ϵ) + 1/ϵ e^(-x\/ϵ)) - 1 + e^(-1\/ϵ)] = 1 
+-ϵ dv(, x, 2)u - dv(, x) u = 1/(e^(-1\/ϵ) -1) [cancel(-ϵ 1/ϵ^2 e^(-x\/ϵ) + 1/ϵ e^(-x\/ϵ)) - 1 + e^(-1\/ϵ)] = 1
 $
 We observe that the proposed solution indeed satisfies @eq:1_bvp.
 
@@ -158,7 +158,7 @@ Where the number of indices $i$ is determined by the remaining number of equatio
 
 The boundary conditions are imposed using the remaining two equations:
 $
-cal(B)_- u_N (α) = g_- wider cal(B)_+ u_N (β) = g_+ wider  
+cal(B)_- u_N (α) = g_- wider cal(B)_+ u_N (β) = g_+ wider
 $
 Where $cal(B)_±$ are the differential operators associated with the conditions (most often _Dirichlet_ or _Neumann_) while $α, β$ are the boundary points and $g_±$ are the boundary values.
 
@@ -187,7 +187,7 @@ weight function for Legendre w(x) = 1, so convenitent
 
 Consider
 $
-  a hat(u)^((2))_n + b hat(u)^((1))_n + c hat(u)_n= hat(f)_n; quad hat(u)^((2))_n = 
+  a hat(u)^((2))_n + b hat(u)^((1))_n + c hat(u)_n= hat(f)_n; quad hat(u)^((2))_n =
   -(b)/(a) hat(u)^((1))_n - c/a hat(u)_n + 1/a hat(f)_n
 $
 Recursion
@@ -215,7 +215,7 @@ $
   1/(2n-1) hat(u)^((1))_(n-1) &= 1/(2n-1) (-(b)/(a) hat(u)_(n-1) - c/a (1/(2n-3) hat(u)_(n-2) - 1/(2n+1) hat(u)_(n) ) + 1/a (1/(2n-3) hat(f)_(n-2) - 1/(2n+1) hat(f)_(n))) = \
   &= (- c/a 1/(2n-1) 1/(2n-3)) hat(u)_(n-2) + (- b/a 1/(2n-1)) hat(u)_(n-1) + (c/a 1/(2n-1) 1/(2n+1)) hat(u)_(n) \
   &+ (1/a 1/(2n-1) 1/(2n-3)) hat(f)_(n-2) + (- 1/a 1/(2n-1) 1/(2n+1)) hat(f)_(n)
-  
+
 $
 Consider
 $
@@ -252,7 +252,7 @@ $
   g_(n, n-2) &= - 1/a 1/(2n-1) 1/(2n-3)\
   g_(n, n) &= 1/a 2 / ((2n-1)(2n+3))\
   g_(n, n+2) &= - 1/a 1/(2n+3) 1/(2n+5)\
-  
+
 $
 
 OMG are we supposed to do the coordinate transformation here ... :(
@@ -294,7 +294,7 @@ $
 Where:
 $
 cal(V) = mat(
-  ϕ_1 (x_1), ϕ_2 (x_1), ..., ϕ_N (x_1); 
+  ϕ_1 (x_1), ϕ_2 (x_1), ..., ϕ_N (x_1);
   ϕ_1 (x_2), ϕ_2 (x_2), ..., ϕ_N (x_2);
   ⋮, ⋮, ⋱, ⋮;
   ϕ_1 (x_N), ϕ_2 (x_N), ..., ϕ_N (x_N);
@@ -306,13 +306,14 @@ $
 cal(D)_z = cal(V)_z cal(V)^(-1)
 $
 
-Where $cal(V)_z$ is constructed in similar fashion to $cal(V)$, though using the derivatives of the basis functions with respect to $z$. 
+Where $cal(V)_z$ is constructed in similar fashion to $cal(V)$, though using the derivatives of the basis functions with respect to $z$.
 
-Using the differentiation matrix $cal(D)_z$ we are able to construct a discrete operator for the differential equation:
+Using the differentiation matrix $cal(D)_z$ we are able to construct a discrete operator for the differential equation given in @eq:1_bvp_canonical:
+$
+  cal(L)_N u(z) = -4ϵ cal(D)_z^2 u(z) - 2 cal(D)_z u(z) = f(z) = 1
 $
 
-$
-
+Lastly, the boundary conditions are imposed by replacing the first and last rows of the operator $cal(L)_N$, corresponding to the boundary points $z = -1$ and $z = 1$, with a mask that selects the corresponding element of $u_N$ while updating the right-hand side to the boundary values accordingly.
 
 === Discussion of Methods <sec:1.a_discussion>
 
@@ -352,7 +353,7 @@ $
 Consider
 $
     r (partial phi) / (partial r) + r^2 (partial^2 phi)/ (partial r^2) + (partial^2 phi) / (partial theta ^ 2) = 0 \
-    
+
     (alpha_1 z_r + alpha_2) 1/alpha_1 partial / (partial z_r) phi + (alpha_1 z_r + alpha_2)^2 1/alpha_1^2 partial^2 / (partial z_r^2) phi + 1/pi^2 partial^2 / (partial z_theta^2) phi = 0 \
 
       (z_r + alpha_2 / alpha_1) partial / (partial z_r) phi + (z_r + alpha_2 / alpha_1)^2 partial^2 / (partial z_r^2) phi + 1/pi^2 partial^2 / (partial z_theta^2) phi = 0
