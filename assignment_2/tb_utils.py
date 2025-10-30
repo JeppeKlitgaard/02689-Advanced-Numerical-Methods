@@ -129,3 +129,16 @@ def evaluate_jacobi_grid(x_eval, x_nodes, alpha=0, beta=0, a=-1, b=1):
         # A[n, :] = z2x(eval_jacobi(n, alpha, beta, z_eval), x0, xN)
         A[n, :] = eval_jacobi(n, alpha, beta, z_eval)
     return A.T
+
+
+def h_jk(k, j, N_input):
+    diff = k - j
+    return 1/2 * np.power(-1.0, diff) * np.cos(1/N_input * np.pi * diff) / np.sin(1/N_input * np.pi * diff)
+
+
+def get_D(N_input, index_array = None):
+    if index_array is None:
+        index_array = np.arange(N_input)
+    D_deriv = h_jk(k = index_array[:, None], j = index_array[None, :], N_input = N_input)
+    np.fill_diagonal(D_deriv, 0.0)
+    return D_deriv
