@@ -60,7 +60,7 @@ def jacobi_gauss_quadrature(
     return x, w
 
 
-def jacobi_gauss_lobatto(N: int, alpha: float, beta: float) -> npt.NDArray[np.float64]:
+def jacobi_gauss_lobatto(N: int, alpha: float, beta: float) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
     """
     Returns the N+1 Gauss-Lobatto nodes for the specified Jacobi polynomial.
 
@@ -69,10 +69,13 @@ def jacobi_gauss_lobatto(N: int, alpha: float, beta: float) -> npt.NDArray[np.fl
     x = np.zeros(N + 1, dtype=float)
     if N == 1:
         x = np.array([-1, 1])
-        return x
-    xint, _ = jacobi_gauss_quadrature(N-2, alpha + 1, beta + 1)
-    x = np.concatenate((np.array([-1]), xint, np.array([1])))
-    return x
+        w = np.array([1, 1])
+        return x, w
+    xint, wint = jacobi_gauss_quadrature(N-2, alpha + 1, beta + 1)
+    x = np.concatenate([[-1.0], xint, [1.0]])
+    w_boundary = 2.0 / (N * (N + 1))
+    w = np.concatenate([[w_boundary], wint, [w_boundary]])
+    return x, w
 
 
 def jacobi_polynomial(x: npt.NDArray, n: int, alpha: float, beta: float) -> npt.NDArray[np.float64]:
