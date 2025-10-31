@@ -60,7 +60,9 @@ def jacobi_gauss_quadrature(
     return x, w
 
 
-def jacobi_gauss_lobatto(N: int, alpha: float, beta: float) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
+def jacobi_gauss_lobatto(
+    N: int, alpha: float, beta: float
+) -> tuple[npt.NDArray[np.float64], npt.NDArray[np.float64]]:
     """
     Returns the N+1 Gauss-Lobatto nodes for the specified Jacobi polynomial.
 
@@ -71,14 +73,16 @@ def jacobi_gauss_lobatto(N: int, alpha: float, beta: float) -> tuple[npt.NDArray
         x = np.array([-1, 1])
         w = np.array([1, 1])
         return x, w
-    xint, wint = jacobi_gauss_quadrature(N-2, alpha + 1, beta + 1)
+    xint, wint = jacobi_gauss_quadrature(N - 2, alpha + 1, beta + 1)
     x = np.concatenate([[-1.0], xint, [1.0]])
     w_boundary = 2.0 / (N * (N + 1))
     w = np.concatenate([[w_boundary], wint, [w_boundary]])
     return x, w
 
 
-def jacobi_polynomial(x: npt.NDArray, n: int, alpha: float, beta: float) -> npt.NDArray[np.float64]:
+def jacobi_polynomial(
+    x: npt.NDArray, n: int, alpha: float, beta: float
+) -> npt.NDArray[np.float64]:
     """
     Evaluates first `n+1` Jacobi polynomials at points `x` with parameters `alpha` and `beta`.
     Reflects L2, slide 12.
@@ -97,7 +101,7 @@ def jacobi_polynomial(x: npt.NDArray, n: int, alpha: float, beta: float) -> npt.
     """
     assert n >= 0, "n must be non-negative"
 
-    P = np.empty((len(x), n+1))
+    P = np.empty((len(x), n + 1))
 
     P[:, 0] = 1.0
     if n == 0:
@@ -129,9 +133,7 @@ def jacobi_polynomial(x: npt.NDArray, n: int, alpha: float, beta: float) -> npt.
     return P[:, n]
 
 
-def jacobi_normalisation_const(
-    n: int, alpha: float, beta: float
-) -> int | npt.NDArray:
+def jacobi_normalisation_const(n: int, alpha: float, beta: float) -> int | npt.NDArray:
     """
     Computes the normalisation constant for Jacobi polynomials.
     Reflects $γ_n^(α,β)$ from L2, slide 11.
@@ -160,7 +162,10 @@ def jacobi_polynomial_normalised(
     norm_const = jacobi_normalisation_const(n, alpha, beta)
     return P / np.sqrt(norm_const)
 
-def grad_jacobi_polynomial(x: npt.NDArray, n: int, alpha: float, beta: float) -> npt.NDArray:
+
+def grad_jacobi_polynomial(
+    x: npt.NDArray, n: int, alpha: float, beta: float
+) -> npt.NDArray:
     """
     Computes the gradient of the first `n+1` Jacobi polynomials at nodes `x`.
     Reflects L2, slide 15.
@@ -179,6 +184,7 @@ def grad_jacobi_polynomial(x: npt.NDArray, n: int, alpha: float, beta: float) ->
     p_i = jacobi_polynomial(x, n=n - 1, alpha=alpha + 1, beta=beta + 1)
 
     return coeff * p_i
+
 
 def grad_jacobi_polynomial_normalised(x, n, k, alpha, beta):
     """
@@ -200,7 +206,7 @@ def grad_jacobi_polynomial_normalised(x, n, k, alpha, beta):
         * gamma(alpha + beta + n + 1 + k)
         / (2**k * gamma(alpha + beta + n + 1))
         * np.sqrt(
-            jacobi_normalisation_const(n-k, alpha + k, beta + k)
+            jacobi_normalisation_const(n - k, alpha + k, beta + k)
             / jacobi_normalisation_const(n, alpha, beta)
         )
     )
@@ -209,20 +215,56 @@ def grad_jacobi_polynomial_normalised(x, n, k, alpha, beta):
     return coeff * p
 
 
+def trigonometric_polynomial(x: npt.NDArray, n: int, k: int) -> npt.NDArray[np.float64]:
+    """
+    Evaluates the trigonometric polynomial of order `n` at points `x`.
+
+    Arguments:
+        x: Points at which to evaluate the polynomials, shape (m,)
+        n: Order of polynomial to compute (must be non-negative)
+        k: Order of derivative to compute (must be non-negative)
+
+    Returns: Array of shape (m,)
+    """
+    deriv_factor = (1j * n) ** k
+    return deriv_factor * np.exp(1j * n * x)
+
+
+def trigonometric_polynomial_centered(
+    x: npt.NDArray, n: int, k: int, N: int
+) -> npt.NDArray[np.float64]:
+    """
+    Evaluates the centered trigonometric polynomial of order `n` at points `x`.
+
+    Centered here means that the basis functions are shifted such that the
+    zero frequency is at n = N // 2.
+
+    Arguments:
+        x: Points at which to evaluate the polynomials, shape (m,)
+        n: Order of polynomial to compute (must be non-negative)
+        k: Order of derivative to compute (must be non-negative)
+        N: Total number of basis functions
+
+    Returns: Array of shape (m,)
+    """
+    n_offset = n - N // 2
+    return trigonometric_polynomial(x, n_offset, k)
+
+
 class BasisFunction(Protocol):
-    def __call__(self, x: npt.NDArray[np.float64], n: int) -> npt.NDArray[np.float64]:
-        ...
+    def __call__(
+        self, x: npt.NDArray[np.float64], n: int
+    ) -> npt.NDArray[np.float64]: ...
+
 
 def construct_vandermonde(
-    x: npt.NDArray[np.float64], N: int, basis_function: BasisFunction
-) -> npt.NDArray[np.float64]:
+    x: npt.NDArray, N: int, basis_function: BasisFunction, dtype=np.float64
+) -> npt.NDArray:
     """
     Construct the Vandermonde matrix V such that V[i,j] = phi_j(x_i),
     where phi_j is the j'th basis function evaluated at point x_i.
     """
-    V = np.zeros((len(x), N), dtype=float)
+    V = np.zeros((len(x), N), dtype=dtype)
     for j in range(N):
         V[:, j] = basis_function(x, j)
     return V
-
-
