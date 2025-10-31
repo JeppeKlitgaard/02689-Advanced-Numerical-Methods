@@ -215,7 +215,9 @@ def grad_jacobi_polynomial_normalised(x, n, k, alpha, beta):
     return coeff * p
 
 
-def trigonometric_polynomial(x: npt.NDArray, n: int, k: int) -> npt.NDArray[np.float64]:
+def trigonometric_polynomial(
+    x: npt.NDArray, n: int, k: int, L: float
+) -> npt.NDArray[np.float64]:
     """
     Evaluates the trigonometric polynomial of order `n` at points `x`.
 
@@ -223,15 +225,17 @@ def trigonometric_polynomial(x: npt.NDArray, n: int, k: int) -> npt.NDArray[np.f
         x: Points at which to evaluate the polynomials, shape (m,)
         n: Order of polynomial to compute (must be non-negative)
         k: Order of derivative to compute (must be non-negative)
+        L: Length of the domain
 
     Returns: Array of shape (m,)
     """
-    deriv_factor = (1j * n) ** k
-    return deriv_factor * np.exp(1j * n * x)
+    freq = 2 * np.pi * n / L
+    deriv_factor = (1j * freq) ** k
+    return deriv_factor * np.exp(1j * freq * x)
 
 
 def trigonometric_polynomial_centered(
-    x: npt.NDArray, n: int, k: int, N: int
+    x: npt.NDArray, n: int, k: int, N: int, L: float
 ) -> npt.NDArray[np.float64]:
     """
     Evaluates the centered trigonometric polynomial of order `n` at points `x`.
@@ -244,11 +248,12 @@ def trigonometric_polynomial_centered(
         n: Order of polynomial to compute (must be non-negative)
         k: Order of derivative to compute (must be non-negative)
         N: Total number of basis functions
+        L: Length of the domain
 
     Returns: Array of shape (m,)
     """
     n_offset = n - N // 2
-    return trigonometric_polynomial(x, n_offset, k)
+    return trigonometric_polynomial(x=x, n=n_offset, k=k, L=L)
 
 
 class BasisFunction(Protocol):
