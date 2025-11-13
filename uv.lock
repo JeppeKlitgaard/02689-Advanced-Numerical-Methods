@@ -16,6 +16,7 @@ name = "assignments"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
+    { name = "gmsh" },
     { name = "ipykernel" },
     { name = "ipywidgets" },
     { name = "matplotlib" },
@@ -31,6 +32,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "gmsh", specifier = ">=4.15.0" },
     { name = "ipykernel", specifier = ">=6.30.1" },
     { name = "ipywidgets", specifier = ">=8.1.8" },
     { name = "matplotlib", specifier = ">=3.10.6" },
@@ -277,6 +279,17 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/98/3d/df77907e5be88adcca93cc2cee00646d039da220164be12bee028401e1cf/fonttools-4.59.2-cp314-cp314t-win32.whl", hash = "sha256:59d85088e29fa7a8f87d19e97a1beae2a35821ee48d8ef6d2c4f965f26cb9f8a", size = 2269719 },
     { url = "https://files.pythonhosted.org/packages/2d/a0/d4c4bc5b50275449a9a908283b567caa032a94505fe1976e17f994faa6be/fonttools-4.59.2-cp314-cp314t-win_amd64.whl", hash = "sha256:7ad5d8d8cc9e43cb438b3eb4a0094dd6d4088daa767b0a24d52529361fd4c199", size = 2333169 },
     { url = "https://files.pythonhosted.org/packages/65/a4/d2f7be3c86708912c02571db0b550121caab8cd88a3c0aacb9cfa15ea66e/fonttools-4.59.2-py3-none-any.whl", hash = "sha256:8bd0f759020e87bb5d323e6283914d9bf4ae35a7307dafb2cbd1e379e720ad37", size = 1132315 },
+]
+
+[[package]]
+name = "gmsh"
+version = "4.15.0"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d6/95/01df2f928b4498bd4705c5cf81b0ed191b6d3b6ce4eaa6fddf6890f4f7cd/gmsh-4.15.0-py2.py3-none-macosx_10_15_x86_64.whl", hash = "sha256:1a7951836982f97e21e8b2de106fe1e8455cde53719191a3950784b56e2606af", size = 40170061 },
+    { url = "https://files.pythonhosted.org/packages/29/a4/b1e9b4997c6f4a29fb8a9736851430bf306701e5f7f1266eafc1f860cbfe/gmsh-4.15.0-py2.py3-none-macosx_12_0_arm64.whl", hash = "sha256:042f76562244dfbad46edfeacaa092c8c95a9df8fb4fd7611771477f0031be0d", size = 36425180 },
+    { url = "https://files.pythonhosted.org/packages/63/22/27f88a5a1c48b833c5893a23b71cf74b5270fac82d88e337ec2c138e8853/gmsh-4.15.0-py2.py3-none-manylinux_2_24_x86_64.whl", hash = "sha256:998527cb172f2529c6beca7334a6ca788fa54fbb3d4f817deb0903005d49344d", size = 40003017 },
+    { url = "https://files.pythonhosted.org/packages/23/51/21175eb9c6a592431a5c87f288ce447af1cea68a6ad4169765dc7ab7a9e7/gmsh-4.15.0-py2.py3-none-win_amd64.whl", hash = "sha256:a5b9867f88af59aff269a93abbd009551fbc263eb94a165a25a0c8072bae13db", size = 42233991 },
 ]
 
 [[package]]
