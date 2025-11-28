@@ -10,6 +10,7 @@ import gmsh
 import matplotlib.pyplot as plt
 import numpy as np
 import numpy.typing as npt
+from scipy.sparse import coo_matrix, eye
 
 
 @dataclass(frozen=True, slots=True)
@@ -29,6 +30,12 @@ class Mesh:
     EtoV: npt.NDArray[
         np.int64
     ]  # Element to vertex connectivity, EToV in Allan's notation
+    EtoE: npt.NDArray[
+        np.int64
+    ]  # comment here
+    EtoF: npt.NDArray[
+        np.int64
+    ]  # comment here
 
     # Node-index mapping
     node_to_idx: dict[int, int]  # Maps node tags to zero-based indices
@@ -137,6 +144,8 @@ def create_2d_circle(
     EtoV_tags = np.array(node_tags_element).reshape(num_elements, num_nodes_per_element)
     EtoV = np.vectorize(node_to_idx.__getitem__)(EtoV_tags)
 
+    EtoE, EtoF = tiConnect2D(EtoV)
+
     num_nodes = len(node_tags)
 
     # Planar graph, so _obviouslyly_, number of vertices is simply:
@@ -152,5 +161,68 @@ def create_2d_circle(
         V_y=V_y,
         EtoV_tags=EtoV_tags,
         EtoV=EtoV,
+        EtoE=EtoE,
+        EtoF=EtoF,
         node_to_idx=node_to_idx,
+    )
+
+
+def tiConnect2D(EToV):
+
+    EToV = np.asarray(EToV, dtype=int)
+    K = EToV.shape[0]
+    Nfaces = 3
+    vn = np.array([[0,1],[1,2],[0,2]])  # local faces
+    Nv = EToV.max()+1  # assume 0-based
+    TotalFaces = K * Nfaces
+
+    rows = []
+    cols = []
+    data = []
+    sk = 0
+    for k in range(K):
+        for f in range(Nfaces):
+            v0, v1 = EToV[k, vn[f]]
+            rows.extend([sk, sk])
+            cols.extend([v0, v1])
+            data.extend([1, 1])
+            sk += 1
+    SpFToV = coo_matrix((data, (rows, cols)), shape=(TotalFaces, Nv)).tocsr()
+    SpFToF = SpFToV @ SpFToV.T - 2 * eye(TotalFaces, format='csr')
+
+    coo = SpFToF.tocoo()
+    mask = coo.data == 2
+    faces1 = coo.row[mask]
+    faces2 = coo.col[mask]
+
+    element1 = faces1 // Nfaces
+    face1 = faces1 % Nfaces
+    element2 = faces2 // Nfaces
+    face2 = faces2 % Nfaces
+
+    EToE = np.tile(np.arange(K)[:, None], (1, Nfaces))
+    EToF = np.tile(np.arange(Nfaces)[None, :], (K, 1))
+    for e1, f1, e2, f2 in zip(element1, face1, element2, face2):
+        EToE[e1, f1] = e2
+        EToF[e1, f1] = f2
+    
+    return EToE, EToF
+
+def create_toy_mesh(V_x, V_y, EtoV):
+    EtoE, EtoF = tiConnect2D(EtoV)
+    num_elements = EtoV.shape[0]
+    num_nodes = V_x.shape[0]
+    num_faces = 2 + num_elements - num_nodes
+
+    return Mesh(
+        num_elements=num_elements,
+        num_nodes=num_nodes,
+        num_faces=num_faces,
+        V_x=V_x,
+        V_y=V_y,
+        EtoV=EtoV,
+        EtoE=EtoE,
+        EtoF=EtoF,
+        node_to_idx = dict(),
+        EtoV_tags = None
     )
