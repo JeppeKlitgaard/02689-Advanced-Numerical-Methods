@@ -1,9 +1,14 @@
-import numpy as np
-from scipy.special import eval_jacobi, factorial, gamma
 from dataclasses import dataclass
-from operators import Vandermonde2D_orthonormal, GradVandermonde2D_orthonormal, Dmatrices2D
+
+import numpy as np
 import numpy.typing as npt
 from mesh import Mesh
+from operators import (
+    Dmatrices2D,
+    GradVandermonde2D_orthonormal,
+    Vandermonde2D_orthonormal,
+)
+from scipy.special import eval_jacobi, factorial, gamma
 
 # quesiton
 # 1) should eval_jacobi (NOT orthonormal) be changed to JacobiP (orthonormal)?
@@ -28,7 +33,7 @@ class DiscretizationElement:
 @dataclass(frozen=True, slots=True)
 class DiscretizationMesh:
     C: npt.NDArray[np.float64]
-    gidx: npt.NDArray[np.int64]  
+    gidx: npt.NDArray[np.int64]
 
     x_full: npt.NDArray[np.float64]
     y_full: npt.NDArray[np.float64]
@@ -36,13 +41,14 @@ class DiscretizationMesh:
     y_global: npt.NDArray[np.float64]
 
     BC_nodes: npt.NDArray[np.int64]
+    BC_normals: npt.NDArray[np.float64]
 
 
 def create_discretization_element(N: int, LocalReorder = None) -> DiscretizationElement:
 
     x_equilateral, y_equilateral = Nodes2D(N)
     r_unordered, s_unordered = equilateral2rs(x_equilateral, y_equilateral)
-    
+
     Mp = (N + 1) * (N + 2) // 2
     fmask1, fmask2, fmask3 = face_masks_triangle(r_unordered, s_unordered, tol=1e-10)
     if LocalReorder is None:
@@ -78,13 +84,15 @@ def create_discretization_mesh(mesh: Mesh, discretization_element: Discretizatio
 
     r, s = discretization_element.r, discretization_element.s
     x_full, y_full = construct_xy_full(mesh, r, s)
-    
+
     C, gidx = build_global_map(discretization_element.N, mesh.EtoV, mesh.EtoE, mesh.EtoF)
     x_global, y_global = build_global_coords(C.T, x_full, y_full)
 
     fmask_list = discretization_element.fmask_list
     LocalReorder = discretization_element.LocalReorder
     BC_nodes, _ = boundary_nodes_from_connectivity(mesh.EtoE, C, fmask_list, LocalReorder)
+    faces_local = apply_local_reorder_to_faces(fmask_list, LocalReorder)
+    BC_normals = get_boundary_normals_at_nodes(bc_nodes=BC_nodes, EtoE=mesh.EtoE, C=C, VX=x_global, VY=y_global, faces_local=faces_local)
 
     return DiscretizationMesh(
         C=C,
@@ -93,7 +101,8 @@ def create_discretization_mesh(mesh: Mesh, discretization_element: Discretizatio
         y_full=y_full,
         x_global=x_global,
         y_global=y_global,
-        BC_nodes=BC_nodes
+        BC_nodes=BC_nodes,
+        BC_normals=BC_normals,
     )
 
 
@@ -362,6 +371,88 @@ def boundary_nodes_from_connectivity(EToE, C, faces_local, LocalReorder=None):
     return bd_nodes, bd_faces
 
 
+def get_boundary_normals_at_nodes(bc_nodes, EtoE, C, VX, VY, faces_local):
+    """
+    Computes outward unit normals averaged at the specified boundary nodes.
+
+    Parameters:
+    -----------
+    bc_nodes    : (N_bc,) array of global node indices where normals are required.
+    EtoE        : (K, 3) Element-to-Element connectivity map.
+    C           : (K, Mp) Element-to-Node (global) map.
+    VX, VY      : (N_global,) Arrays of node coordinates.
+    faces_local : List of 3 arrays containing local node indices for each face.
+                  e.g., [np.array([0,1]), np.array([1,2]), np.array([2,0])]
+
+    Returns:
+    --------
+    normals : (N_bc, 2) Array of unit normals [nx, ny] corresponding to bc_nodes.
+    """
+    bc_nodes = np.asarray(bc_nodes, dtype=int)
+    EtoE = np.asarray(EtoE, dtype=int)
+    C = np.asarray(C, dtype=int)
+    XY = np.column_stack((VX, VY))
+
+    n_global = XY.shape[0]
+    K = EtoE.shape[0]
+
+    # Accumulators for global normals
+    global_nx = np.zeros(n_global)
+    global_ny = np.zeros(n_global)
+
+    # Identify Boundary Faces
+    # Checks for 1-based (self=e+1, or 0) or 0-based (self=e, or -1) conventions
+    eidx = np.arange(K)[:, None]
+    if EtoE.min() >= 1:
+        is_bdy = ((EtoE == (eidx + 1)) | (EtoE == 0))
+    else:
+        is_bdy = ((EtoE == eidx) | (EtoE == -1))
+
+    # Iterate Elements to Accumulate Normals
+    for e in range(K):
+        for f in range(3):
+            if is_bdy[e, f]:
+                # Indices and Coordinates for this face
+                loc_idx = faces_local[f]
+                g_idx = C[e, loc_idx]
+                face_xy = XY[g_idx]
+
+                # np.gradient computes differences between adjacent nodes on the face
+                tangents = np.gradient(face_xy, axis=0)
+
+                # (dx, dy) -> (dy, -dx)
+                current_normals = np.column_stack((tangents[:, 1], -tangents[:, 0]))
+
+                # Orientation Check (Outward)
+                # Vector from Element Centroid to Face Node
+                elem_centroid = np.mean(XY[C[e]], axis=0)
+                vec_from_center = face_xy - elem_centroid
+
+                # If dot product is negative, normal points inward. Flip it.
+                if np.mean(np.sum(vec_from_center * current_normals, axis=1)) < 0:
+                    current_normals = -current_normals
+
+                # Normalize contribution to ensure purely angle-weighted averaging at corners
+                mag = np.linalg.norm(current_normals, axis=1, keepdims=True)
+                mag[mag < 1e-14] = 1.0 # Safety
+                current_normals /= mag
+
+                global_nx[g_idx] += current_normals[:, 0]
+                global_ny[g_idx] += current_normals[:, 1]
+
+    # Extract and Normalize for requested bc_nodes
+    req_nx = global_nx[bc_nodes]
+    req_ny = global_ny[bc_nodes]
+
+    req_normals = np.column_stack((req_nx, req_ny))
+
+    # Final Normalization
+    final_mag = np.linalg.norm(req_normals, axis=1, keepdims=True)
+    final_mag[final_mag < 1e-14] = 1.0
+
+    return req_normals / final_mag
+
+
 # def prepare_general_operators(N, LocalReorder):
 
 #     x_equilateral, y_equilateral = Nodes2D(N)
@@ -373,7 +464,7 @@ def boundary_nodes_from_connectivity(EToE, C, faces_local, LocalReorder=None):
 #     Dr, Ds = Dmatrices2D(V=V, Vr=Vr, Vs=Vs)
 #     M_inv_canonical = V @ V.T
 #     M_canonical = np.linalg.inv(M_inv_canonical)
-    
+
 #     return r_reordered, s_reordered, Dr, Ds, M_canonical
 
 
