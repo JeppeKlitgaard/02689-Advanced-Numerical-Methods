@@ -41,6 +41,7 @@ class DiscretizationMesh:
     y_global: npt.NDArray[np.float64]
 
     BC_nodes: npt.NDArray[np.int64]
+    BC_faces: npt.NDArray[np.int64]
     BC_normals: npt.NDArray[np.float64]
 
 
@@ -90,7 +91,7 @@ def create_discretization_mesh(mesh: Mesh, discretization_element: Discretizatio
 
     fmask_list = discretization_element.fmask_list
     LocalReorder = discretization_element.LocalReorder
-    BC_nodes, _ = boundary_nodes_from_connectivity(mesh.EtoE, C, fmask_list, LocalReorder)
+    BC_nodes, BC_faces = boundary_nodes_from_connectivity(mesh.EtoE, C, fmask_list, LocalReorder)
     faces_local = apply_local_reorder_to_faces(fmask_list, LocalReorder)
     BC_normals = get_boundary_normals_at_nodes(bc_nodes=BC_nodes, EtoE=mesh.EtoE, C=C, VX=x_global, VY=y_global, faces_local=faces_local)
 
@@ -102,6 +103,7 @@ def create_discretization_mesh(mesh: Mesh, discretization_element: Discretizatio
         x_global=x_global,
         y_global=y_global,
         BC_nodes=BC_nodes,
+        BC_faces=BC_faces,
         BC_normals=BC_normals,
     )
 
