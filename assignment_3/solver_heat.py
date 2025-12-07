@@ -3,7 +3,7 @@ import numpy as np
 import scipy.sparse as sp
 import numpy.typing as npt
 from tqdm import tqdm
-from solver_bvp import get_n_element_operators
+from solver import get_n_element_operators
 
 class SolverHeatEquation2D:
     def __init__(

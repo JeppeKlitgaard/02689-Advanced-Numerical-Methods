@@ -167,6 +167,93 @@ def create_2d_circle(
     )
 
 
+def create_2d_square(
+    half_width: float, origin: tuple[float, float], mesh_size: float
+) -> Mesh:
+    """
+    Create a 2D square and mesh it using triangles via Gmsh.
+
+    Parameters:
+        half_width: Half of the square's side length.
+        origin: (x, y) coordinates of the square's center.
+        mesh_size: Maximum size of the mesh elements.
+
+    Returns:
+        Mesh: The generated mesh object.
+    """
+    ox, oy = origin
+    gmsh.initialize()
+    gmsh.option.setNumber("Mesh.CharacteristicLengthMax", mesh_size)
+    gmsh.model.add("square")
+
+    # Square corner points in CCW order
+    p1 = gmsh.model.occ.addPoint(ox - half_width, oy - half_width, 0)
+    p2 = gmsh.model.occ.addPoint(ox + half_width, oy - half_width, 0)
+    p3 = gmsh.model.occ.addPoint(ox + half_width, oy + half_width, 0)
+    p4 = gmsh.model.occ.addPoint(ox - half_width, oy + half_width, 0)
+
+    # Lines forming boundary
+    l1 = gmsh.model.occ.addLine(p1, p2)
+    l2 = gmsh.model.occ.addLine(p2, p3)
+    l3 = gmsh.model.occ.addLine(p3, p4)
+    l4 = gmsh.model.occ.addLine(p4, p1)
+
+    loop = gmsh.model.occ.addCurveLoop([l1, l2, l3, l4])
+    surface = gmsh.model.occ.addPlaneSurface([loop])
+
+    gmsh.model.occ.synchronize()
+
+    gmsh.model.mesh.generate(dim=2)
+
+    # Get element data
+    element_types, element_tags, node_tags_element = gmsh.model.mesh.getElements(
+        dim=2, tag=surface
+    )
+    assert len(element_types) == 1, "Unexpected number of element types"
+    element_type = element_types[0]
+    num_elements = len(element_tags[0])
+
+    name, dim, order, num_nodes_per_element, local_node_coord, num_primary_nodes = (
+        gmsh.model.mesh.getElementProperties(element_type)
+    )
+    assert dim == 2, "Element dimension mismatch"
+    assert num_nodes_per_element == 3, "We want triangular mesh, something went wrong"
+
+    # Node coordinates
+    node_tags, node_coords, _ = gmsh.model.mesh.getNodes()
+    node_coords = np.array(node_coords).reshape(-1, 3)
+    V_x = node_coords[:, 0]
+    V_y = node_coords[:, 1]
+
+    # EtoV connectivity
+    node_to_idx = {tag: idx for idx, tag in enumerate(node_tags)}
+    EtoV_tags = np.array(node_tags_element).reshape(num_elements, num_nodes_per_element)
+    EtoV = np.vectorize(node_to_idx.__getitem__)(EtoV_tags)
+
+    EtoE, EtoF = tiConnect2D(EtoV)
+
+    num_nodes = len(node_tags)
+
+    # Euler characteristic formula for planar triangulation
+    num_faces = 2 + num_elements - num_nodes
+
+    gmsh.finalize()
+
+    return Mesh(
+        num_elements=num_elements,
+        num_nodes=num_nodes,
+        num_faces=num_faces,
+        V_x=V_x,
+        V_y=V_y,
+        EtoV_tags=EtoV_tags,
+        EtoV=EtoV,
+        EtoE=EtoE,
+        EtoF=EtoF,
+        node_to_idx=node_to_idx,
+    )
+
+
+
 def tiConnect2D(EToV):
 
     EToV = np.asarray(EToV, dtype=int)
