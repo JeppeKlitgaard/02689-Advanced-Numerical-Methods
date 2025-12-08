@@ -253,6 +253,71 @@ def create_2d_square(
     )
 
 
+def create_2d_square_structured(
+    half_width: float,
+    origin: tuple[float, float],
+    Nx: int,
+    Ny: int,
+) -> Mesh:
+    """
+    Structured triangular mesh on a square [-half_width, half_width]^2
+    centered at origin. Rectangles are split with the same diagonal.
+
+    Nx, Ny: number of rectangles in x and y directions.
+    """
+
+    ox, oy = origin
+    L = half_width
+
+    # 1. Structured grid of vertices
+    x1d = np.linspace(ox - L, ox + L, Nx + 1)
+    y1d = np.linspace(oy - L, oy + L, Ny + 1)
+    X, Y = np.meshgrid(x1d, y1d, indexing="xy")  # shape (Ny+1, Nx+1)
+
+    V_x = X.ravel()
+    V_y = Y.ravel()
+    num_nodes = V_x.size
+
+    # 2. Connectivity EtoV
+    # node index at (i,j): j + i*(Nx+1), with i=0..Ny, j=0..Nx
+    def node(i, j):
+        return j + i * (Nx + 1)
+
+    elems = []
+    for i in range(Ny):
+        for j in range(Nx):
+            n00 = node(i, j)       # (x_j,   y_i)
+            n10 = node(i, j + 1)   # (x_{j+1}, y_i)
+            n01 = node(i + 1, j)   # (x_j,   y_{i+1})
+            n11 = node(i + 1, j + 1)
+
+            # Choose one diagonal consistently, e.g. (n00, n10, n11) and (n00, n11, n01)
+            elems.append([n00, n10, n11])
+            elems.append([n00, n11, n01])
+
+    EtoV = np.array(elems, dtype=int)
+    num_elements = EtoV.shape[0]
+
+    # 3. Build adjacency (reuse your tiConnect2D)
+    EtoE, EtoF = tiConnect2D(EtoV)
+
+    # Euler characteristic: F = 2 + E - V
+    num_faces = 2 + num_elements - num_nodes
+
+    return Mesh(
+        num_elements=num_elements,
+        num_nodes=num_nodes,
+        num_faces=num_faces,
+        V_x=V_x,
+        V_y=V_y,
+        EtoV=EtoV,
+        EtoE=EtoE,
+        EtoF=EtoF,
+        EtoV_tags=None,
+        node_to_idx=None
+    )
+
+
 
 def tiConnect2D(EToV):
 
@@ -294,6 +359,7 @@ def tiConnect2D(EToV):
         EToF[e1, f1] = f2
     
     return EToE, EToF
+
 
 def create_toy_mesh(V_x, V_y, EtoV):
     EtoE, EtoF = tiConnect2D(EtoV)
