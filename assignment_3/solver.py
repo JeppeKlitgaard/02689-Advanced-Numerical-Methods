@@ -27,18 +27,13 @@ class AdvectionIVPSolver2D:
         g_bc,
         g_bc_dt,
         f_rhs,
-        with_upwind_scheme: bool = True,
     ):
         self.mesh = mesh
         self.discretization_element = discretization_element
         self.discretization_mesh = discretization_mesh
-        self.with_upwind_scheme = with_upwind_scheme
 
         # Advection velocity field, must be stationary
         self.advection_velocity_field = advection_velocity_field
-
-        # Resolve boundary nodes to impose boundary conditions at while respecting upwind scheme
-        self.resolved_boundary_nodes = self.resolve_boundary_nodes()
 
         # These are used for the boundary conditions
         self.g_bc = g_bc  # Boundary Condition u(x,y,t)
@@ -50,32 +45,8 @@ class AdvectionIVPSolver2D:
         # Assemble constant matrices immediately (since velocity field is stationary)
         self.L_global, self.M_global = self.construct_global_assembly()
 
-        # Apply BCs to get system matrices
-        self.M_sys, self.L_sys = self.apply_matrix_bc()
-
         # Pre-factorize M for efficiency
-        self.M_sys_solver = sp.linalg.factorized(self.M_sys.tocsc())
-
-
-    def resolve_boundary_nodes(self) -> npt.NDArray:
-        """
-        Identify boundary nodes where the advection velocity points outward.
-        These nodes will have their values imposed directly from the boundary condition.
-        """
-        if not self.with_upwind_scheme:
-            return self.discretization_mesh.BC_nodes
-
-        bc_nodes = self.discretization_mesh.BC_nodes
-        bc_normals = self.discretization_mesh.BC_normals
-
-        x_global = self.discretization_mesh.x_global
-        y_global = self.discretization_mesh.y_global
-
-        a_x, a_y = self.advection_velocity_field(x_global[bc_nodes], y_global[bc_nodes])
-
-        a_n = a_x * bc_normals[:, 0] + a_y * bc_normals[:, 1]
-
-        return bc_nodes[a_n < 0]
+        self.M_global_solver = sp.linalg.factorized(self.M_global.tocsc())
 
     def construct_L_n_element(self, Dx, Dy, M, x_nodes, y_nodes):
         ax, ay = self.advection_velocity_field(x_nodes, y_nodes)
@@ -151,41 +122,6 @@ class AdvectionIVPSolver2D:
 
         return L_global, M_global
 
-    # def apply_matrix_bc(self):
-    #     """
-    #     Modifies M and L to enforce BCs on the system level (Algorithm 17).
-    #     For boundary node i:
-    #       Row i of L_sys becomes 0.
-    #       Row i of M_sys becomes unit row (diagonal=1, others=0).
-    #     Equation becomes: 1 * du_i/dt = RHS_i
-    #     """
-    #     M_sys = self.M_global.copy()
-    #     L_sys = self.L_global.copy()
-    #     bc_nodes = self.resolved_boundary_nodes
-
-    #     # Zero out rows for boundary nodes
-    #     # Note: We do NOT zero out columns. The interior nodes still need
-    #     # to "feel" the mass/advection from the boundary nodes.
-    #     M_sys[bc_nodes, :] = 0.0
-    #     L_sys[bc_nodes, :] = 0.0
-
-    #     # Set diagonal of Mass matrix to 1.0 for boundary nodes
-    #     M_sys[bc_nodes, bc_nodes] = 1.0
-
-    #     return M_sys, L_sys
-
-    def apply_matrix_bc(self):
-        """
-        Modifies M and L to enforce BCs on the system level (Algorithm 17).
-        For boundary node i:
-          Row i of L_sys becomes 0.
-          Row i of M_sys becomes unit row (diagonal=1, others=0).
-        Equation becomes: 1 * du_i/dt = RHS_i
-        """
-
-        # IMPOSE WEAKLY INSTEAD!
-        return self.M_global, self.L_global
-
     def compute_boundary_flux_term(self, u_current, t):
         """
         Computes the boundary integral vector using the Upwind Flux from Eq (16).
@@ -225,7 +161,7 @@ class AdvectionIVPSolver2D:
                                 a_n * u_minus,
                                 a_n * u_bc)
 
-            net_flux = f_n_star - (a_n * u_minus)
+            net_flux = f_n_star - 0.5 * (a_n * u_minus)
 
             # Integrate over the face
             weighted_flux = net_flux * w_1d * J_s
@@ -252,6 +188,6 @@ class AdvectionIVPSolver2D:
         rhs -= flux
 
         # Solve
-        du_dt = self.M_sys_solver(rhs)
+        du_dt = self.M_global_solver(rhs)
 
         return du_dt
