@@ -138,26 +138,26 @@
 
 #         return M_sys, L_sys
 
-#     def get_rhs_IVP(self, t, u):
-#         """
-#         Computes du/dt = M^-1 * (-L*u + f + BC_terms)
-#         """
-#         x_global = self.discretization_mesh.x_global
-#         y_global = self.discretization_mesh.y_global
-#         bc_nodes = self.discretization_mesh.BC_nodes
+    # def get_rhs_IVP(self, t, u):
+    #     """
+    #     Computes du/dt = M^-1 * (-L*u + f + BC_terms)
+    #     """
+    #     x_global = self.discretization_mesh.x_global
+    #     y_global = self.discretization_mesh.y_global
+    #     bc_nodes = self.discretization_mesh.BC_nodes
 
-#         u_full = u.copy()
-#         u_full[bc_nodes] = self.g_bc(x_global[bc_nodes], y_global[bc_nodes], t)
+    #     u_full = u.copy()
+    #     u_full[bc_nodes] = self.g_bc(x_global[bc_nodes], y_global[bc_nodes], t)
 
-#         # Construct RHS
-#         # Term 1: - L * u
-#         rhs = -self.L_sys @ u_full
-#         # Term 2: + f (source term)
-#         f_vec = self.f_rhs(x_global, y_global, t)
-#         rhs += self.M_sys @ f_vec
+    #     # Construct RHS
+    #     # Term 1: - L * u
+    #     rhs = -self.L_sys @ u_full
+    #     # Term 2: + f (source term)
+    #     f_vec = self.f_rhs(x_global, y_global, t)
+    #     rhs += self.M_sys @ f_vec
 
-#         rhs[bc_nodes] = self.g_bc_dt(x_global[bc_nodes], y_global[bc_nodes], t)
+    #     rhs[bc_nodes] = self.g_bc_dt(x_global[bc_nodes], y_global[bc_nodes], t)
 
-#         du_dt = self.M_sys_solver(rhs)
+    #     du_dt = self.M_sys_solver(rhs)
 
-#         return du_dt
+    #     return du_dt
