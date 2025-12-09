@@ -1,29 +1,18 @@
-import numpy as np
-import numpy.typing as npt
-import scipy.sparse as sp
 from discretization import DiscretizationElement, Psi
-from operators import Dmatrices2D_xy, GeometricFactors2D
+from operators import GeometricFactors2D, Dmatrices2D_xy
+import numpy as np
+import scipy.sparse as sp
+import numpy.typing as npt
 from tqdm import tqdm
 from utils import jacobi_gauss_lobatto
 
-
 # this could be computed in DiscretizationMesh class
-def get_n_element_operators(
-    discretization_element: DiscretizationElement, v1_n, v2_n, v3_n
-):
+def get_n_element_operators(discretization_element: DiscretizationElement, v1_n, v2_n, v3_n):
+
     x_n, y_n = Psi(discretization_element.r, discretization_element.s, v1_n, v2_n, v3_n)
-    rx, sx, ry, sy, J = GeometricFactors2D(
-        x_n, y_n, discretization_element.Dr, discretization_element.Ds
-    )
+    rx, sx, ry, sy, J = GeometricFactors2D(x_n, y_n, discretization_element.Dr, discretization_element.Ds)
     M = J[:, None] * discretization_element.M_canonical
-    Dx, Dy = Dmatrices2D_xy(
-        Dr=discretization_element.Dr,
-        Ds=discretization_element.Ds,
-        rx=rx,
-        sx=sx,
-        ry=ry,
-        sy=sy,
-    )
+    Dx, Dy = Dmatrices2D_xy(Dr=discretization_element.Dr, Ds=discretization_element.Ds, rx=rx, sx=sx, ry=ry, sy=sy)
 
     return Dx, Dy, M, x_n, y_n
 
@@ -70,7 +59,7 @@ class AdvectionIVPSolver2D:
         # Split form
         MAx = M @ np.diag(ax) @ Dx
         MAy = M @ np.diag(ay) @ Dy
-        return 1 / 2 * ((MAx - MAx.T) + (MAy - MAy.T))
+        return 1/2 * ((MAx - MAx.T) + (MAy - MAy.T))
 
     def construct_global_assembly(self) -> tuple[npt.NDArray, npt.NDArray]:
         """
@@ -163,12 +152,14 @@ class AdvectionIVPSolver2D:
             a_n = ax * nx + ay * ny
 
             # State values
-            u_minus = u_current[face_nodes]  # Internal solution
-            u_bc = self.g_bc(x_f, y_f, t)  # Boundary condition
+            u_minus = u_current[face_nodes]       # Internal solution
+            u_bc = self.g_bc(x_f, y_f, t)         # Boundary condition
 
             # If a_n > 0 (Outflow): f* = a_n * u_minus
             # If a_n < 0 (Inflow):  f* = a_n * u_bc
-            f_n_star = np.where(a_n > 0, a_n * u_minus, a_n * u_bc)
+            f_n_star = np.where(a_n > 0,
+                                a_n * u_minus,
+                                a_n * u_bc)
 
             net_flux = f_n_star - 0.5 * (a_n * u_minus)
 

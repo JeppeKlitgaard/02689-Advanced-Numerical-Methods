@@ -3,6 +3,7 @@ name = "assignments"
 version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
+    "colorcet>=3.1.0",
     "gmsh>=4.15.0",
     "imageio-ffmpeg>=0.6.0",
     "ipykernel>=6.30.1",
