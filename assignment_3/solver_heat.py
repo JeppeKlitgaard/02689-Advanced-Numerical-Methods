@@ -127,6 +127,7 @@ class SolverHeatEquation2D:
         # Term 1: - L * u
         rhs = -self.L_sys @ u_full
         # Term 2: + f (source term)
+        
         f_vec = self.f_rhs(x_global, y_global, t)
         rhs += self.M_sys @ f_vec
 
